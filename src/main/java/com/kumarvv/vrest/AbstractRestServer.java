@@ -1,6 +1,8 @@
 package com.kumarvv.vrest;
 
-import org.json.simple.JSONValue;
+import org.codehaus.jackson.JsonGenerationException;
+import org.codehaus.jackson.map.JsonMappingException;
+import org.codehaus.jackson.map.ObjectMapper;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -15,16 +17,16 @@ import java.util.Map;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
-import static com.kumarvv.vrest.AbstractResource.GET;
-import static com.kumarvv.vrest.AbstractResource.Path;
+import static com.kumarvv.vrest.AbstractResource.*;
 
 /**
-* Created with IntelliJ IDEA.
-* User: kmarvv
-* Date: 7/25/14
-* Time: 5:08 PM
-* To change this template use File | Settings | File Templates.
-*/
+ * Simple REST server with just two classes (server and REST resource).
+ *
+ * No HTTP server / servlet container required.
+ * Uses Java SE socket to listen and process client requests.
+ * Multi-threaded request processing.
+ *
+ */
 public abstract class AbstractRestServer {
 
 	private static final String NEW_LINE = "\n";
@@ -39,6 +41,7 @@ public abstract class AbstractRestServer {
 	private static final Executor _threadPool = Executors.newFixedThreadPool(DEFAULT_NUM_THREADS);
 
 	private final Map<String, Object> _resourcesMap = new HashMap<String, Object>();
+	private Class<?>[] _resourceClazzes = {};
 
 	protected AbstractRestServer() {
 		_resourcesMap.put("GET", new HashMap<String, Object>());
@@ -53,7 +56,8 @@ public abstract class AbstractRestServer {
 	 * @param port
 	 * @throws java.io.IOException
 	 */
-	public void start(int port) {
+	public void start(int port, Class<?>[] resourceClazzes) {
+		_resourceClazzes = resourceClazzes;
 		scanResources();
 
 		try {
@@ -75,13 +79,15 @@ public abstract class AbstractRestServer {
 	}
 
 	/**
-	 * scan all resources
+	 * scan all resources annotated wih @Path
+	 *
+	 * @see Path
+	 * @see GET
 	 */
 	private void scanResources() {
 		log("scanning resources...");
-		Class[] clazzes = new Class[] { TestResource.class };
 		// temp code
-		for (Class clazz : clazzes) {
+		for (Class clazz : _resourceClazzes) {
 			if (clazz.isAnnotationPresent(Path.class)) {
 				Path pathAnn = (Path) clazz.getAnnotation(Path.class);
 
@@ -90,9 +96,22 @@ public abstract class AbstractRestServer {
 						GET getAnn = m.getAnnotation(GET.class);
 						registerApi("GET", pathAnn.value(), getAnn.value(), new API(clazz, m));
 					}
+					if (m.isAnnotationPresent(POST.class)) {
+						POST getAnn = m.getAnnotation(POST.class);
+						registerApi("POST", pathAnn.value(), getAnn.value(), new API(clazz, m));
+					}
+					if (m.isAnnotationPresent(PUT.class)) {
+						PUT getAnn = m.getAnnotation(PUT.class);
+						registerApi("PUT", pathAnn.value(), getAnn.value(), new API(clazz, m));
+					}
+					if (m.isAnnotationPresent(DELETE.class)) {
+						DELETE getAnn = m.getAnnotation(DELETE.class);
+						registerApi("DELETE", pathAnn.value(), getAnn.value(), new API(clazz, m));
+					}
 				}
 			}
 		}
+		log("scanning completed.");
 	}
 
 	/**
@@ -115,7 +134,7 @@ public abstract class AbstractRestServer {
 			if (mPath.charAt(0) == '/') { // becomes root path
 				path = mPath;
 			} else {
-				path = (cPath.charAt(cPath.length()-1) == '/' ? "" : SLASH) + mPath.trim();
+				path = cPath + (cPath.charAt(cPath.length()-1) == '/' ? "" : SLASH) + mPath.trim();
 			}
 		}
 		api.setPath(path);
@@ -127,7 +146,7 @@ public abstract class AbstractRestServer {
 
 		Map<String, Object> resMap = (Map<String, Object>)_resourcesMap.get(type);
 		if (resMap == null) {
-			log("Unknown method: " + type);
+			log("Unknown method: " + type, true);
 			return false;
 		}
 
@@ -142,11 +161,18 @@ public abstract class AbstractRestServer {
 			}
 			registerMap(resMap, SLASH, api);
 		}
+		log("Found api: " + api.toString() + " @ " + path);
 		return true;
 	}
 
 	private Map<String, Object> registerMap(Map<String, Object> resMap, String path, API api) {
-		Map<String, Object> childMap = new HashMap<String, Object>();
+		Object o = resMap.get(path);
+		Map<String, Object> childMap;
+		if (o != null) {
+			childMap = (Map<String, Object>) o;
+		} else {
+			childMap = new HashMap<String, Object>();
+		}
 		if (api != null) {
 			resMap.put(SLASH, api);
 		} else {
@@ -163,6 +189,9 @@ public abstract class AbstractRestServer {
 				Map<String, Object> map = (Map<String, Object>) parent.get(ps[i]);
 				if (map == null) {
 					map = (Map<String, Object>) parent.get("*");
+					if (map == null) {
+						return null; // no api registered
+					}
 				}
 				if (i == ps.length -1) { // last
 					Object o = map.get("/");
@@ -184,12 +213,10 @@ public abstract class AbstractRestServer {
 		PrintWriter out;
 		try {
 			String webServerAddress = s.getInetAddress().toString();
-			System.out.println("New Connection:" + webServerAddress);
+			System.out.println("New request: " + webServerAddress);
 
-			Map<String, String> params = processRequest(s);
-
+			Map<String, String> params = processRequestParams(s);
 			String response = prepareResponse(params);
-
 			out = new PrintWriter(s.getOutputStream(), true);
 			out.println(prepareResponseHeader(response.length()));
 			out.println(response);
@@ -197,7 +224,7 @@ public abstract class AbstractRestServer {
 			out.close();
 			s.close();
 		} catch (IOException e) {
-			System.out.println("Failed respond to client request: " + e.getMessage());
+			log("Failed respond to client request: " + e.getMessage(), true);
 			e.printStackTrace();
 		} finally {
 			if (s != null) {
@@ -216,7 +243,7 @@ public abstract class AbstractRestServer {
 	 * @param socket
 	 * @return
 	 */
-	private Map<String, String> processRequest(Socket socket) {
+	private Map<String, String> processRequestParams(Socket socket) {
 		BufferedReader in;
 		Map<String, String> params = new HashMap<String, String>();
 		try {
@@ -256,6 +283,8 @@ public abstract class AbstractRestServer {
 		} catch (IOException ioe) {
 			ioe.printStackTrace();
 		}
+
+
 		return params;
 	}
 
@@ -297,15 +326,39 @@ public abstract class AbstractRestServer {
 	 * @return
 	 */
 	private String getDefaultResponse(Map<String,String> params) {
-		return JSONValue.toJSONString(params);
+		return toJSONString(params);
 	}
 
 	/**
 	 * log -- implement sl4j
 	 * @param msg
 	 */
+	private void log(String msg, boolean error) {
+		System.out.println(error ? "ERROR: " : "INFO: " + msg);
+	}
 	private void log(String msg) {
-		System.out.println("INFO: " + msg);
+		log(msg, false);
+	}
+
+	/**
+	 * to JSON (using jackson)
+	 *
+	 * @param o
+	 * @return
+	 */
+	private static String toJSONString(Object o) {
+		String rc = "";
+		try {
+			ObjectMapper mapper = new ObjectMapper();
+			rc = mapper.writeValueAsString(o);
+		} catch (JsonMappingException e) {
+			e.printStackTrace();
+		} catch (JsonGenerationException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return rc;
 	}
 
 	/**
@@ -368,7 +421,7 @@ public abstract class AbstractRestServer {
 			} catch (InvocationTargetException e) {
 				e.printStackTrace();
 			}
-			return JSONValue.toJSONString(rc);
+			return toJSONString(rc);
 		}
 
 		@Override
@@ -376,4 +429,5 @@ public abstract class AbstractRestServer {
 			return clazz.getName() + "." + method.getName();
 		}
 	}
+
 }

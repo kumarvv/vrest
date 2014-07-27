@@ -46,6 +46,12 @@ public abstract class AbstractResource {
 		public String value() default "";
 	}
 
+	@Target({ElementType.PARAMETER})
+	@Retention(RetentionPolicy.RUNTIME)
+	public static @interface Param {
+		public String value();
+	}
+
 	private Map<String, String> requestParams = new HashMap<String, String>();
 	public Map<String, String> geRequestParams() {
 		return requestParams;
