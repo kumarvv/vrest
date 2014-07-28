@@ -8,11 +8,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * (c) kappals.com
+ * AbstractResource to provide support for request, url params.
  *
- * User: Vijay
- * Date: 7/25/14
- * Time: 9:26 PM
  */
 public abstract class AbstractResource {
 

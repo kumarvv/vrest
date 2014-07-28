@@ -22,10 +22,12 @@ import static com.kumarvv.vrest.AbstractResource.*;
 /**
  * Simple REST server with just two classes (server and REST resource).
  *
- * No HTTP server / servlet container required.
- * Uses Java SE socket to listen and process client requests.
- * Multi-threaded request processing.
+ * - No HTTP server / servlet container required.
+ * - Uses Java SE socket to listen and process client requests.
+ * - Multi-threaded request processing (100 threads by default).
+ * - Uses jackson mapper (org.codehaus.jackson) for JSON processing
  *
+ * @see AbstractResource
  */
 public abstract class AbstractRestServer {
 
@@ -43,6 +45,9 @@ public abstract class AbstractRestServer {
 	private final Map<String, Object> _resourcesMap = new HashMap<String, Object>();
 	private Class<?>[] _resourceClazzes = {};
 
+	/**
+	 * initialize supported HTTP methods
+	 */
 	protected AbstractRestServer() {
 		_resourcesMap.put("GET", new HashMap<String, Object>());
 		_resourcesMap.put("POST", new HashMap<String, Object>());
@@ -51,7 +56,8 @@ public abstract class AbstractRestServer {
 	}
 
 	/**
-	 * scans for REST resources, starts server and listens for request
+	 * Starts REST server and also scans for REST resources in provided
+	 * classes.
 	 *
 	 * @param port
 	 * @throws java.io.IOException
@@ -79,7 +85,9 @@ public abstract class AbstractRestServer {
 	}
 
 	/**
-	 * scan all resources annotated wih @Path
+	 * scan provided classes annotated wih @Path and supported HTTP methods
+	 *
+	 * TODO: scan classes from classpath or current application directory
 	 *
 	 * @see Path
 	 * @see GET
@@ -165,6 +173,14 @@ public abstract class AbstractRestServer {
 		return true;
 	}
 
+	/**
+	 * supports registerApi method by initializing nested childMap for resource path
+	 *
+	 * @param resMap
+	 * @param path
+	 * @param api
+	 * @return
+	 */
 	private Map<String, Object> registerMap(Map<String, Object> resMap, String path, API api) {
 		Object o = resMap.get(path);
 		Map<String, Object> childMap;
@@ -181,6 +197,13 @@ public abstract class AbstractRestServer {
 		return childMap;
 	}
 
+	/**
+	 * parses request context path and returns API (class method) registered
+	 * for the path if available
+	 *
+	 * @param path
+	 * @return API
+	 */
 	private API getRequestAPI(String path) {
 		String[] ps = path.split(SLASH);
 		if (ps != null && ps.length > 0) {
@@ -206,7 +229,14 @@ public abstract class AbstractRestServer {
 	}
 
 	/**
-	 * handle request
+	 * handles incoming REST request.
+	 *
+	 * Following steps are performed:
+	 * - process request params
+	 * - process request body (JSON only supported at this time)
+	 * - prepares response headers
+	 * - prepares response body using registered API
+	 *
 	 * @param s
 	 */
 	private void HandleRequest(Socket s) {
@@ -239,9 +269,10 @@ public abstract class AbstractRestServer {
 	}
 
 	/**
-	 * parse request
+	 * parse request and creates request parameters map (includes request headers also)
+	 *
 	 * @param socket
-	 * @return
+	 * @return request parameter map
 	 */
 	private Map<String, String> processRequestParams(Socket socket) {
 		BufferedReader in;
@@ -284,12 +315,11 @@ public abstract class AbstractRestServer {
 			ioe.printStackTrace();
 		}
 
-
 		return params;
 	}
 
 	/**
-	 * build and return http response header
+	 * prepares response header
 	 *
 	 * @param contentLength
 	 * @return
@@ -306,7 +336,9 @@ public abstract class AbstractRestServer {
 	}
 
 	/**
-	 * prepare response
+	 * Identify and execute API for the request action, then prepare response JSON.
+	 *
+	 * Default response (requestParams in JSON format) when no API found for the request.
 	 *
 	 * @param requestParams
 	 * @return
@@ -316,17 +348,8 @@ public abstract class AbstractRestServer {
 		if (api != null) {
 			return api.execute(requestParams);
 		} else {
-			return getDefaultResponse(requestParams);
+			return toJSONString(requestParams);
 		}
-	}
-
-	/**
-	 * default response
-	 * @param params
-	 * @return
-	 */
-	private String getDefaultResponse(Map<String,String> params) {
-		return toJSONString(params);
 	}
 
 	/**
