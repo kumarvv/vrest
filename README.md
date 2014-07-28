@@ -19,6 +19,8 @@ Sample Server:
 --------------
 
 ```
+import com.kumarvv.vrest.AbstractRestServer;
+
 /**
  * Sample REST Server listens at 4001
  */
@@ -37,6 +39,15 @@ Sample REST Resource:
 ---------------------
 
 ```
+import com.kumarvv.vrest.AbstractResource;
+
+import java.io.IOException;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+
+import org.codehaus.jackson.map.ObjectMapper;
+
 /**
  * Sample request with full CRUD
  */
@@ -117,6 +128,17 @@ POST /cities/new     => maps to MyResource.create()
 PUT /cities/:city    => maps to MyResource.update() 
 DELETE /cities/:city => maps to MyResource.delete() 
 GET /echo/:str       => maps to MyResource.echo() 
+```
+
+GET request of <code>http://localhost:4001/cities/NYC</code> will return following json: 
+
+```
+{
+    "code": "NYC",
+    "name": "New York",
+    "created": "Sun Jul 18 13:24:12 EDT 2014",
+    "updated": "Sun Jul 18 13:24:34 EDT 2014"
+}
 ```
 
 
