@@ -38,7 +38,7 @@ This class starts the server in localhost:4001 and scans MyResource class for RE
 Sample REST Resource: 
 ---------------------
 
-```
+```java
 import com.kumarvv.vrest.AbstractResource;
 
 import java.io.IOException;
@@ -121,7 +121,7 @@ public class MyResource extends AbstractResource {
 ```
 
 This class generates REST resources in following context paths: 
-```
+```http
 GET /cities          => maps to MyResource.all() 
 GET /cities/:city    => maps to MyResource.getCity()
 POST /cities/new     => maps to MyResource.create() 
@@ -132,7 +132,7 @@ GET /echo/:str       => maps to MyResource.echo()
 
 GET request of <code>http://localhost:4001/cities/NYC</code> will return following json: 
 
-```
+```json
 {
     "code": "NYC",
     "name": "New York",
