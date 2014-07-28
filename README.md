@@ -121,7 +121,7 @@ public class MyResource extends AbstractResource {
 ```
 
 This class generates REST resources in following context paths: 
-```http
+```
 GET /cities          => maps to MyResource.all() 
 GET /cities/:city    => maps to MyResource.getCity()
 POST /cities/new     => maps to MyResource.create() 
