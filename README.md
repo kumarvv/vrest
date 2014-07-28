@@ -7,6 +7,13 @@ Simple REST server with just two classes (server and REST resource).
 - Uses Java SE socket to listen and process client requests.
 - Multi-threaded request processing (100 threads by default).
 - Uses jackson mapper (org.codehaus.jackson) for JSON processing
+- Jave SE 1.7 or above 
+
+Limitations: 
+- its not a production ready server, but gives quick REST resources for testing your clients 
+- supports JSON data communications only 
+- jackson is required for JSON processing 
+
 
 Sample Server: 
 --------------
