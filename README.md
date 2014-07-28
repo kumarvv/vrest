@@ -18,7 +18,7 @@ Limitations:
 Sample Server: 
 --------------
 
-```
+```java
 import com.kumarvv.vrest.AbstractRestServer;
 
 /**
