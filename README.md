@@ -132,9 +132,10 @@ GET /echo/:str       => maps to MyResource.echo()
 Note on <code>/echo/:str</code>, starting with <code>/</code> in <code>@GET("/echo/:str")</code> makes the resource to be at root bypassing the <code>@Path</code> annotation at class level. All other resources have <code>/cities</code> as prefix from <code>@Path</code> annotation. 
 
 
+Sample Request/Response: 
+--------------
 
 GET request of <code>http://localhost:4001/cities/NYC</code> will return following json: 
-
 ```json
 {
     "code": "NYC",
