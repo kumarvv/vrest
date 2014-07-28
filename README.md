@@ -129,7 +129,8 @@ PUT /cities/:city    => maps to MyResource.update()
 DELETE /cities/:city => maps to MyResource.delete() 
 GET /echo/:str       => maps to MyResource.echo() 
 ```
-Note on /echo/:str, having "/" in @GET("/echo/:str") makes the resource to be at root bypassing the @Path annotation at class level. All other resources have "/cities" as prefix from @Path annotation. 
+Note on <code>/echo/:str</code>, having <code>/</code> in <code>@GET("/echo/:str")</code> makes the resource to be at root bypassing the <code>@Path</code> annotation at class level. All other resources have <code>/cities</code> as prefix from <code>@Path</code> annotation. 
+
 
 
 GET request of <code>http://localhost:4001/cities/NYC</code> will return following json: 
