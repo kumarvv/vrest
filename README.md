@@ -23,6 +23,8 @@ public class MyServer extends AbstractRestServer {
 }
 ```
 
+This class starts the server in localhost:4001 and scans MyResource class for REST resources. 
+
 
 Sample REST Resource: 
 ---------------------
@@ -99,3 +101,16 @@ public class MyResource extends AbstractResource {
 	}
 }
 ```
+
+This class generates REST resources in following context paths: 
+```
+GET /cities          => maps to MyResource.all() 
+GET /cities/:city    => maps to MyResource.getCity()
+POST /cities/new     => maps to MyResource.create() 
+PUT /cities/:city    => maps to MyResource.update() 
+DELETE /cities/:city => maps to MyResource.delete() 
+GET /echo/:str       => maps to MyResource.echo() 
+```
+
+
+
