@@ -1,4 +1,3 @@
-import com.kumarvv.vrest.AbstractResource;
 import org.codehaus.jackson.map.ObjectMapper;
 
 import java.io.IOException;
@@ -6,11 +5,13 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
+import static com.kumarvv.vrest.RESTServer.*;
+
 /**
  * Sample request with full CRUD
  */
-@AbstractResource.Path("/cities")
-public class MyResource extends AbstractResource {
+@Path("/cities")
+public class CityResource {
 
 	private static Map<String, City> cities;
 	static {
@@ -27,31 +28,24 @@ public class MyResource extends AbstractResource {
 	}
 
 	@GET(":city")
-	public City getCity() {
-		return cities.get(getUrlParam("city"));
+	public City getCity(String a, @Param("city") String c, String b) {
+		return cities.get(c);
 	}
 
 	@POST("new")
-	public City create() {
-		try {
-			ObjectMapper mapper = new ObjectMapper();
-			City city = mapper.readValue(getRequestParam("Payload"), City.class);
-			city.setCreatedAt(new Date());
-			cities.put(city.getCode(), city);
-			return city;
-		} catch (IOException e) {
-			e.printStackTrace();
-			return null;
-		}
+	public City create(@Data City city) {
+		city.setCreatedAt(new Date());
+		cities.put(city.getCode(), city);
+		return city;
 	}
 
 	@PUT(":city")
 	public City update() {
-		City city = cities.get(getUrlParam("city"));
+		City city = cities.get("NYC");
 		if (city != null) {
 			try {
 				ObjectMapper mapper = new ObjectMapper();
-				City upd = mapper.readValue(getRequestParam("Payload"), City.class);
+				City upd = mapper.readValue("", City.class);
 				city.setName(upd.getName());
 				city.setUpdatedAt(new Date());
 				cities.put(city.getCode(), city);
@@ -67,12 +61,12 @@ public class MyResource extends AbstractResource {
 
 	@DELETE(":city")
 	public String delete() {
-		cities.remove(getUrlParam("city"));
-		return "City [" + getUrlParam("city") + "] deleted successfully";
+		cities.remove("NYC");
+		return "City [" +"NYC" + "] deleted successfully";
 	}
 
 	@GET("/echo/:str")
 	public String echo() {
-		return getUrlParam("str");
+		return "";
 	}
 }
