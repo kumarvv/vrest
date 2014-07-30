@@ -20,6 +20,7 @@ Setup
 Download or checkout and run following maven command: 
 
 ```bash
+$ mvn compile
 $ mvn exec:exec -DRESTServer
 ```
 
