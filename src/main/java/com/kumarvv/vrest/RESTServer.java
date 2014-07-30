@@ -16,14 +16,13 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
 /**
- * Simple REST server with just two classes (server and REST resource).
+ * Simple REST server with just one class for complete processing.
  *
  * - No HTTP server / servlet container required.
  * - Uses Java SE socket to listen and process client requests.
  * - Multi-threaded request processing (100 threads by default).
  * - Uses jackson mapper (org.codehaus.jackson) for JSON processing
  *
- * @see com.kumarvv.vrest.AbstractResource
  */
 public class RESTServer {
 
@@ -180,19 +179,6 @@ public class RESTServer {
 		}
 		String path = normalizeApiPath(root, mPath);
 
-		for (Class<?> c : m.getParameterTypes()) {
-			log("PARAM: " + c);
-		}
-
-		int i = 0, j = 0;
-		for (Annotation[] anns : m.getParameterAnnotations()) {
-			for (Annotation ann : anns) {
-				log("ANN["+i+","+j+"]=" + ann.toString());
-				j++;
-			}
-			i++;
-		}
-
 		return registerApi(httpMethod, path, new API(clazz, m, path));
 	}
 
@@ -251,7 +237,7 @@ public class RESTServer {
 			}
 			buildApiMap(resMap, SLASH, api);
 		}
-		log("Found api: " + api.toString() + " @ " + path);
+		log("Found api: " + api.toString() + " => " + path);
 		return true;
 	}
 
@@ -471,8 +457,7 @@ public class RESTServer {
 			Object rc = null;
 			try {
 				Object ob = clazz.newInstance();
-				if (ob instanceof AbstractResource) {
-					AbstractResource ar = ((AbstractResource) ob);
+				if (method.getParameterTypes().length > 0) {
 					String[] ps = requestParams.get("Context-Path").split("/");
 					Map<String, String> urlParams = new HashMap<String, String>();
 					for (Integer i : paramsDef.keySet()) {
@@ -480,36 +465,24 @@ public class RESTServer {
 							urlParams.put(paramsDef.get(i), ps[i]);
 						}
 					}
-					ar.initParams(requestParams, urlParams);
-					rc = method.invoke(ar);
-				} else {
-					if (method.getParameterTypes().length > 0) {
-						String[] ps = requestParams.get("Context-Path").split("/");
-						Map<String, String> urlParams = new HashMap<String, String>();
-						for (Integer i : paramsDef.keySet()) {
-							if (i < ps.length) {
-								urlParams.put(paramsDef.get(i), ps[i]);
+					Object[] mParams = new Object[method.getParameterTypes().length];
+					int i = 0, j = 0;
+					for (Annotation[] anns : method.getParameterAnnotations()) {
+						for (Annotation ann : anns) {
+							if (ann instanceof Param) {
+								String key = ((Param) ann).value();
+								mParams[i] = urlParams.containsKey(key) ? urlParams.get(key) : requestParams.get(key);
 							}
-						}
-						Object[] mParams = new Object[method.getParameterTypes().length];
-						int i = 0, j = 0;
-						for (Annotation[] anns : method.getParameterAnnotations()) {
-							for (Annotation ann : anns) {
-								if (ann instanceof Param) {
-									String key = ((Param) ann).value();
-									mParams[i] = urlParams.containsKey(key) ? urlParams.get(key) : requestParams.get(key);
-								}
-								if (ann instanceof Data) {
-									mParams[i] = toObject(requestParams.get("Payload"), method.getParameterTypes()[i]);
-								}
-								j++;
+							if (ann instanceof Data) {
+								mParams[i] = toObject(requestParams.get("Payload"), method.getParameterTypes()[i]);
 							}
-							i++;
+							j++;
 						}
-						rc = method.invoke(ob, mParams);
-					} else {
-						rc = method.invoke(ob);
+						i++;
 					}
+					rc = method.invoke(ob, mParams);
+				} else {
+					rc = method.invoke(ob);
 				}
 			} catch (Exception e) {
 				e.printStackTrace();

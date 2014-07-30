@@ -1,6 +1,3 @@
-import org.codehaus.jackson.map.ObjectMapper;
-
-import java.io.IOException;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -28,8 +25,8 @@ public class CityResource {
 	}
 
 	@GET(":city")
-	public City getCity(String a, @Param("city") String c, String b) {
-		return cities.get(c);
+	public City getCity(@Param("city") String cityCode) {
+		return cities.get(cityCode);
 	}
 
 	@POST("new")
@@ -40,33 +37,26 @@ public class CityResource {
 	}
 
 	@PUT(":city")
-	public City update() {
-		City city = cities.get("NYC");
+	public City update(@Param("city") String cityCode, @Data City upd) {
+		City city = cities.get(cityCode);
 		if (city != null) {
-			try {
-				ObjectMapper mapper = new ObjectMapper();
-				City upd = mapper.readValue("", City.class);
-				city.setName(upd.getName());
-				city.setUpdatedAt(new Date());
-				cities.put(city.getCode(), city);
-				return city;
-			} catch (IOException e) {
-				e.printStackTrace();
-				return null;
-			}
+			city.setName(upd.getName());
+			city.setUpdatedAt(new Date());
+			cities.put(city.getCode(), city);
+			return city;
 		} else {
 			return null;
 		}
 	}
 
 	@DELETE(":city")
-	public String delete() {
-		cities.remove("NYC");
-		return "City [" +"NYC" + "] deleted successfully";
+	public String delete(@Param("city") String cityCode) {
+		cities.remove(cityCode);
+		return "City [" + cityCode + "] deleted successfully";
 	}
 
 	@GET("/echo/:str")
-	public String echo() {
-		return "";
+	public String echo(@Param("str") String str) {
+		return "echo: " + str;
 	}
 }
