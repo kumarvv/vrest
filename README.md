@@ -1,18 +1,61 @@
 vrest
 =====
 
-Simple REST server with just two classes (server and REST resource).
+Simple single class REST server using Java SE only.
 
-- No HTTP server / servlet container required
+- Jave SE 1.6 or above 
+- No HTTP server / servlet container required 
 - Uses Java SE socket to listen and process client requests
 - Multi-threaded request processing (100 threads by default)
 - Uses jackson mapper (org.codehaus.jackson) for JSON processing
-- Jave SE 1.7 or above 
 
-Limitations: 
-- its not a production ready server, but gives quick REST resources for testing your clients 
+<strong>Limitations:</strong> 
+- Not a production ready server (for quick REST services testing only) 
 - supports JSON data communications only 
 
+Setup
+-----
+
+Download or checkout and run following maven command: 
+
+```bash
+$ mvn exec:exec -DRESTServer
+```
+
+This command should scan all the classes in current directory for REST resources and listens on 4001 port: 
+
+```bash
+$ mvn exec:exec -DRESTServer
+[INFO] Scanning for projects...
+[WARNING] 
+[WARNING] Some problems were encountered while building the effective model for vjrest:vjrest:jar:1.0-SNAPSHOT
+[WARNING] 'build.plugins.plugin.version' for org.codehaus.mojo:exec-maven-plugin is missing. @ line 29, column 14
+[WARNING] 
+[WARNING] It is highly recommended to fix these problems because they threaten the stability of your build.
+[WARNING] 
+[WARNING] For this reason, future Maven versions might no longer support building such malformed projects.
+[WARNING] 
+[INFO] 
+[INFO] Using the builder org.apache.maven.lifecycle.internal.builder.singlethreaded.SingleThreadedBuilder with a thread count of 1
+[INFO]                                                                         
+[INFO] ------------------------------------------------------------------------
+[INFO] Building vjrest 1.0-SNAPSHOT
+[INFO] ------------------------------------------------------------------------
+[INFO] 
+[INFO] --- exec-maven-plugin:1.3.2:exec (default-cli) @ vjrest ---
+INFO: scanning resources...
+INFO: Found api: CityResource.delete => /cities/:city
+INFO: Found api: CityResource.all => /cities
+INFO: Found api: CityResource.create => /cities/new
+INFO: Found api: CityResource.update => /cities/:city
+INFO: Found api: CityResource.getCity => /cities/:city
+INFO: Found api: CityResource.echo => /echo/:str
+INFO: Found api: CityResource.getRequestParams => /params
+INFO: scanning completed.
+INFO: starting server...
+INFO: listening on http://localhost:4001
+
+```
 
 Sample Server: 
 --------------
