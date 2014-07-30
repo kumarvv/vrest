@@ -16,4 +16,30 @@
 		</dependency>
 	</dependencies>
 
+	<profiles>
+		<profile>
+			<id>RESTServer</id>
+			<activation>
+				<property>
+					<name>RESTServer</name>
+				</property>
+			</activation>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.codehaus.mojo</groupId>
+						<artifactId>exec-maven-plugin</artifactId>
+						<configuration>
+							<executable>java</executable>
+							<arguments>
+								<argument>-classpath</argument>
+								<classpath/>
+								<argument>com.kumarvv.vrest.RESTServer</argument>
+							</arguments>
+						</configuration>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+	</profiles>
 </project>

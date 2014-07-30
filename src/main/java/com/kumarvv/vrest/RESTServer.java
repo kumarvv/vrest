@@ -87,7 +87,7 @@ public class RESTServer {
 	/**
 	 * scan provided classes annotated wih @Path and supported HTTP methods
 	 *
-	 * @see com.kumarvv.vrest.RESTServer.Path
+	 * @see com.kumarvv.vrest.RESTServer.Resource
 	 * @see com.kumarvv.vrest.RESTServer.GET
 	 */
 	private void scanResources() {
@@ -98,8 +98,8 @@ public class RESTServer {
 
 		// temp code
 		for (Class clazz : clazzes) {
-			if (clazz.isAnnotationPresent(Path.class)) {
-				Path pathAnn = (Path) clazz.getAnnotation(Path.class);
+			if (clazz.isAnnotationPresent(Resource.class)) {
+				Resource pathAnn = (Resource) clazz.getAnnotation(Resource.class);
 
 				for (Method m : clazz.getMethods()) {
 					checkMethod(pathAnn.value(), clazz, m);
@@ -136,14 +136,14 @@ public class RESTServer {
 							URL url = child.toURI().toURL();
 							ClassLoader cl = new URLClassLoader(new URL[]{url});
 							Class<?> clazz = cl.loadClass(fqcn);
-							if (clazz.isAnnotationPresent(Path.class)) {
+							if (clazz.isAnnotationPresent(Resource.class)) {
 								clazzes.add(clazz);
 							}
 						} catch (MalformedURLException e) {
 							e.printStackTrace();
 						} catch (ClassNotFoundException e) {
 							log("Could not load class: " + fqcn);
-							//e.printStackTrace();
+							e.printStackTrace();
 						}
 					}
 				}
@@ -514,7 +514,7 @@ public class RESTServer {
 
 	@Target({ElementType.TYPE})
 	@Retention(RetentionPolicy.RUNTIME)
-	public static @interface Path {
+	public static @interface Resource {
 		public String value();
 	}
 

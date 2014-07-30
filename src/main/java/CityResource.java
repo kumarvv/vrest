@@ -7,7 +7,7 @@ import static com.kumarvv.vrest.RESTServer.*;
 /**
  * Sample request with full CRUD
  */
-@Path("/cities")
+@Resource("/cities")
 public class CityResource {
 
 	private static Map<String, City> cities;
