@@ -59,4 +59,9 @@ public class CityResource {
 	public String echo(@Param("str") String str) {
 		return "echo: " + str;
 	}
+
+	@GET("/params")
+	public Map<String, String> getRequestParams(@Params Map<String, String> params) {
+		return params;
+	}
 }

@@ -326,8 +326,20 @@ public class RESTServer {
 			if (p.length > 0) {
 				params.put("Http-Method", p[0]);
 				if (p.length > 1) {
-					params.put("Context-Path", p[1]);
-					params.put("Action", p[0] + p[1]);
+					String contextPath = p[1];
+					String[] cps = p[1].split("\\?");
+					if (cps.length > 1) {
+						contextPath = cps[0];
+						String[] ups = cps[1].split("&");
+						for (String up : ups) {
+							String[] upp = up.split("=");
+							if (upp.length > 1) {
+								params.put(upp[0], upp[1]);
+							}
+						}
+					}
+					params.put("Context-Path", contextPath);
+					params.put("Action", p[0] + contextPath);
 					if (p.length > 2) {
 						params.put("Http-Version", p[2]);
 					}
@@ -390,7 +402,7 @@ public class RESTServer {
 		if (api != null) {
 			return api.execute(requestParams);
 		} else {
-			return toJSON(requestParams);
+			return "{ \"error\" : \"requested API not found: " + requestParams.get("Action") + "\" }";
 		}
 	}
 
@@ -405,6 +417,9 @@ public class RESTServer {
 		String[] ps = path.split(SLASH);
 		if (ps != null && ps.length > 0) {
 			Map<String, Object> parent = (Map<String, Object>) _resourcesMap.get(ps[0]);
+			if (parent == null) {
+				return null; // no API found
+			}
 			for (int i = 1; i < ps.length; i++) {
 				Map<String, Object> map = (Map<String, Object>) parent.get(ps[i]);
 				if (map == null) {
@@ -472,8 +487,9 @@ public class RESTServer {
 							if (ann instanceof Param) {
 								String key = ((Param) ann).value();
 								mParams[i] = urlParams.containsKey(key) ? urlParams.get(key) : requestParams.get(key);
-							}
-							if (ann instanceof Data) {
+							} else if (ann instanceof Params) {
+								mParams[i] = requestParams;
+							} else if (ann instanceof Data) {
 								mParams[i] = toObject(requestParams.get("Payload"), method.getParameterTypes()[i]);
 							}
 							j++;
@@ -534,6 +550,11 @@ public class RESTServer {
 
 	@Target({ElementType.PARAMETER})
 	@Retention(RetentionPolicy.RUNTIME)
+	public static @interface Params {
+	}
+
+	@Target({ElementType.PARAMETER})
+	@Retention(RetentionPolicy.RUNTIME)
 	public static @interface Data {
 	}
 
@@ -555,6 +576,9 @@ public class RESTServer {
 	 * @return
 	 */
 	public static String toJSON(Object o) {
+		if (o == null) {
+			return "{}";
+		}
 		String rc = "";
 		try {
 			ObjectMapper mapper = new ObjectMapper();
