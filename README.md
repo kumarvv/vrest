@@ -1,41 +1,111 @@
 vrest
 =====
 
-Simple REST server with just two classes (server and REST resource).
+Simple single class REST server using Java SE only.
 
-- No HTTP server / servlet container required
+- Jave SE 1.6 or above 
+- No HTTP server / servlet container required 
 - Uses Java SE socket to listen and process client requests
 - Multi-threaded request processing (100 threads by default)
 - Uses jackson mapper (org.codehaus.jackson) for JSON processing
-- Jave SE 1.7 or above 
+- Automatic scanning of all REST resources in current classpath (no configurations required)
 
-Limitations: 
-- its not a production ready server, but gives quick REST resources for testing your clients 
+<strong>Limitations:</strong> 
+- Not a production ready server (for quick REST services testing only) 
 - supports JSON data communications only 
 
+Setup
+-----
 
-Sample Server: 
---------------
+Download or checkout and run following maven command: 
 
-```java
-import com.kumarvv.vrest.AbstractRestServer;
+```bash
+$ mvn exec:exec -DRESTServer
+```
 
-/**
- * Sample REST Server listens at 4001
- */
-public class MyServer extends AbstractRestServer {
-	public static void main(String[] args) {
-		MyServer myServer = new MyServer();
-		myServer.start(4001, new Class<?>[] { MyResource.class });
-	}
+This command should scan all the classes in current directory for REST resources and listens on 4001 port: 
+
+```bash
+$ mvn exec:exec -DRESTServer
+[INFO] Scanning for projects...
+[WARNING] 
+[WARNING] Some problems were encountered while building the effective model for vjrest:vjrest:jar:1.0-SNAPSHOT
+[WARNING] 'build.plugins.plugin.version' for org.codehaus.mojo:exec-maven-plugin is missing. @ line 29, column 14
+[WARNING] 
+[WARNING] It is highly recommended to fix these problems because they threaten the stability of your build.
+[WARNING] 
+[WARNING] For this reason, future Maven versions might no longer support building such malformed projects.
+[WARNING] 
+[INFO] 
+[INFO] Using the builder org.apache.maven.lifecycle.internal.builder.singlethreaded.SingleThreadedBuilder with a thread count of 1
+[INFO]                                                                         
+[INFO] ------------------------------------------------------------------------
+[INFO] Building vjrest 1.0-SNAPSHOT
+[INFO] ------------------------------------------------------------------------
+[INFO] 
+[INFO] --- exec-maven-plugin:1.3.2:exec (default-cli) @ vjrest ---
+INFO: scanning resources...
+INFO: Found api: CityResource.delete => /cities/:city
+INFO: Found api: CityResource.all => /cities
+INFO: Found api: CityResource.create => /cities/new
+INFO: Found api: CityResource.update => /cities/:city
+INFO: Found api: CityResource.getCity => /cities/:city
+INFO: Found api: CityResource.echo => /echo/:str
+INFO: Found api: CityResource.getRequestParams => /params
+INFO: scanning completed.
+INFO: starting server...
+INFO: listening on http://localhost:4001
+
+```
+
+Usage: 
+------
+
+Import static properties from RESTServer class and add <code>@Resource</code> annotation with path to any POJO (or non-POJO) classes: 
+
+```java 
+import static com.kumarvv.vrest.RESTServer.*;
+
+@Resource("/cities")
+public class CityResource {
+...
+```
+
+Add <code>@GET</code> (or <code>@POST, @PUT, @UPDATE</code>) annotation to the class method. This annotation also supports resource path to append to class resource path. 
+
+```java 
+@GET
+public Map<String, City> all() {
+...
+
+@GET("favorties")  // resolves to "/cities/favorites"
+public Map<String, City> favorites() {
+	return cities;
 }
 ```
 
-This class starts the server in localhost:4001 and scans MyResource class for REST resources. 
+Add <code>@Param</code> to inject request or url parameter value to method arguments: 
+
+```java
+@GET(":city")
+public City getCity(@Param("city") String cityCode) {
+	return cities.get(cityCode);
+}
+```
+
+Request using <code>/cities/NYC</code> url will pass the <code>NYC</code> value to <code>cityCode</code> method argument. 
+Add <code>@Data</code> to inject request payload (form-data) to method argument: 
+
+```java
+@PUT(":city")
+public City update(@Param("city") String cityCode, @Data City upd) {
+	City city = cities.get(cityCode);
+...
+```
 
 
-Sample REST Resource: 
----------------------
+Sample REST Resource class: 
+---------------------------
 
 ```java
 import java.util.Date;
@@ -47,7 +117,7 @@ import static com.kumarvv.vrest.RESTServer.*;
 /**
  * Sample request with full CRUD
  */
-@Path("/cities")
+@Resource("/cities")
 public class CityResource {
 
 	private static Map<String, City> cities;
@@ -99,17 +169,23 @@ public class CityResource {
 	public String echo(@Param("str") String str) {
 		return "echo: " + str;
 	}
+
+	@GET("/params")
+	public Map<String, String> getRequestParams(@Params Map<String, String> params) {
+		return params;
+	}
 }
 ```
 
 This class generates REST resources in following context paths: 
 ```
-GET /cities          => maps to MyResource.all() 
-GET /cities/:city    => maps to MyResource.getCity()
-POST /cities/new     => maps to MyResource.create() 
-PUT /cities/:city    => maps to MyResource.update() 
-DELETE /cities/:city => maps to MyResource.delete() 
-GET /echo/:str       => maps to MyResource.echo() 
+GET /cities          => maps to CityResource.all() 
+GET /cities/:city    => maps to CityResource.getCity()
+POST /cities/new     => maps to CityResource.create() 
+PUT /cities/:city    => maps to CityResource.update() 
+DELETE /cities/:city => maps to CityResource.delete() 
+GET /echo/:str       => maps to CityResource.echo() 
+GET /params          => maps to CityResource.getRequestParams()
 ```
 Note on <code>/echo/:str</code>, starting with <code>/</code> in <code>@GET("/echo/:str")</code> makes the resource to be at root bypassing the <code>@Path</code> annotation at class level. All other resources have <code>/cities</code> as prefix from <code>@Path</code> annotation. 
 
