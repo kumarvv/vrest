@@ -38,20 +38,17 @@ Sample REST Resource:
 ---------------------
 
 ```java
-import com.kumarvv.vrest.AbstractResource;
-
-import java.io.IOException;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.codehaus.jackson.map.ObjectMapper;
+import static com.kumarvv.vrest.RESTServer.*;
 
 /**
  * Sample request with full CRUD
  */
-@AbstractResource.Path("/cities")
-public class MyResource extends AbstractResource {
+@Path("/cities")
+public class CityResource {
 
 	private static Map<String, City> cities;
 	static {
@@ -68,53 +65,39 @@ public class MyResource extends AbstractResource {
 	}
 
 	@GET(":city")
-	public City getCity() {
-		return cities.get(getUrlParam("city"));
+	public City getCity(@Param("city") String cityCode) {
+		return cities.get(cityCode);
 	}
 
 	@POST("new")
-	public City create() {
-		try {
-			ObjectMapper mapper = new ObjectMapper();
-			City city = mapper.readValue(getRequestParam("Payload"), City.class);
-			city.setCreatedAt(new Date());
-			cities.put(city.getCode(), city);
-			return city;
-		} catch (IOException e) {
-			e.printStackTrace();
-			return null;
-		}
+	public City create(@Data City city) {
+		city.setCreatedAt(new Date());
+		cities.put(city.getCode(), city);
+		return city;
 	}
 
 	@PUT(":city")
-	public City update() {
-		City city = cities.get(getUrlParam("city"));
+	public City update(@Param("city") String cityCode, @Data City upd) {
+		City city = cities.get(cityCode);
 		if (city != null) {
-			try {
-				ObjectMapper mapper = new ObjectMapper();
-				City upd = mapper.readValue(getRequestParam("Payload"), City.class);
-				city.setName(upd.getName());
-				city.setUpdatedAt(new Date());
-				cities.put(city.getCode(), city);
-				return city;
-			} catch (IOException e) {
-				e.printStackTrace();
-				return null;
-			}
+			city.setName(upd.getName());
+			city.setUpdatedAt(new Date());
+			cities.put(city.getCode(), city);
+			return city;
 		} else {
 			return null;
 		}
 	}
 
 	@DELETE(":city")
-	public String delete() {
-		cities.remove(getUrlParam("city"));
-		return "City [" + getUrlParam("city") + "] deleted successfully";
+	public String delete(@Param("city") String cityCode) {
+		cities.remove(cityCode);
+		return "City [" + cityCode + "] deleted successfully";
 	}
 
 	@GET("/echo/:str")
-	public String echo() {
-		return getUrlParam("str");
+	public String echo(@Param("str") String str) {
+		return "echo: " + str;
 	}
 }
 ```
