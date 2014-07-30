@@ -8,6 +8,7 @@ Simple single class REST server using Java SE only.
 - Uses Java SE socket to listen and process client requests
 - Multi-threaded request processing (100 threads by default)
 - Uses jackson mapper (org.codehaus.jackson) for JSON processing
+- Automatic scanning of all REST resources in current classpath (no configurations required)
 
 <strong>Limitations:</strong> 
 - Not a production ready server (for quick REST services testing only) 
@@ -57,28 +58,54 @@ INFO: listening on http://localhost:4001
 
 ```
 
-Sample Server: 
---------------
+Usage: 
+------
 
-```java
-import com.kumarvv.vrest.AbstractRestServer;
+Import static properties from RESTServer class and add <code>@Resource</code> annotation with path to any POJO (or non-POJO) classes: 
 
-/**
- * Sample REST Server listens at 4001
- */
-public class MyServer extends AbstractRestServer {
-	public static void main(String[] args) {
-		MyServer myServer = new MyServer();
-		myServer.start(4001, new Class<?>[] { MyResource.class });
-	}
+```java 
+import static com.kumarvv.vrest.RESTServer.*;
+
+@Resource("/cities")
+public class CityResource {
+...
+```
+
+Add <code>@GET</code> (or <code>@POST, @PUT, @UPDATE</code>) annotation to the class method. This annotation also supports resource path to append to class resource path. 
+
+```java 
+@GET
+public Map<String, City> all() {
+...
+
+@GET("favorties")  // resolves to "/cities/favorites"
+public Map<String, City> favorites() {
+	return cities;
 }
 ```
 
-This class starts the server in localhost:4001 and scans MyResource class for REST resources. 
+Add <code>@Param</code> to inject request or url parameter value to method arguments: 
+
+```java
+@GET(":city")
+public City getCity(@Param("city") String cityCode) {
+	return cities.get(cityCode);
+}
+```
+
+Request using <code>/cities/NYC</code> url will pass the <code>NYC</code> value to <code>cityCode</code> method argument. 
+Add <code>@Data</code> to inject request payload (form-data) to method argument: 
+
+```java
+@PUT(":city")
+public City update(@Param("city") String cityCode, @Data City upd) {
+	City city = cities.get(cityCode);
+...
+```
 
 
-Sample REST Resource: 
----------------------
+Sample REST Resource class: 
+---------------------------
 
 ```java
 import java.util.Date;
@@ -90,7 +117,7 @@ import static com.kumarvv.vrest.RESTServer.*;
 /**
  * Sample request with full CRUD
  */
-@Path("/cities")
+@Resource("/cities")
 public class CityResource {
 
 	private static Map<String, City> cities;
@@ -142,17 +169,23 @@ public class CityResource {
 	public String echo(@Param("str") String str) {
 		return "echo: " + str;
 	}
+
+	@GET("/params")
+	public Map<String, String> getRequestParams(@Params Map<String, String> params) {
+		return params;
+	}
 }
 ```
 
 This class generates REST resources in following context paths: 
 ```
-GET /cities          => maps to MyResource.all() 
-GET /cities/:city    => maps to MyResource.getCity()
-POST /cities/new     => maps to MyResource.create() 
-PUT /cities/:city    => maps to MyResource.update() 
-DELETE /cities/:city => maps to MyResource.delete() 
-GET /echo/:str       => maps to MyResource.echo() 
+GET /cities          => maps to CityResource.all() 
+GET /cities/:city    => maps to CityResource.getCity()
+POST /cities/new     => maps to CityResource.create() 
+PUT /cities/:city    => maps to CityResource.update() 
+DELETE /cities/:city => maps to CityResource.delete() 
+GET /echo/:str       => maps to CityResource.echo() 
+GET /params          => maps to CityResource.getRequestParams()
 ```
 Note on <code>/echo/:str</code>, starting with <code>/</code> in <code>@GET("/echo/:str")</code> makes the resource to be at root bypassing the <code>@Path</code> annotation at class level. All other resources have <code>/cities</code> as prefix from <code>@Path</code> annotation. 
 
