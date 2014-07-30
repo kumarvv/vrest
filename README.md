@@ -1,4 +1,4 @@
-vrest
+vREST
 =====
 
 Simple single class REST server using Java SE only.
