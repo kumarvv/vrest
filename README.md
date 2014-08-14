@@ -29,21 +29,7 @@ This command should scan all the classes in current directory for REST resources
 ```bash
 $ mvn exec:exec -DRESTServer
 [INFO] Scanning for projects...
-[WARNING] 
-[WARNING] Some problems were encountered while building the effective model for vjrest:vjrest:jar:1.0-SNAPSHOT
-[WARNING] 'build.plugins.plugin.version' for org.codehaus.mojo:exec-maven-plugin is missing. @ line 29, column 14
-[WARNING] 
-[WARNING] It is highly recommended to fix these problems because they threaten the stability of your build.
-[WARNING] 
-[WARNING] For this reason, future Maven versions might no longer support building such malformed projects.
-[WARNING] 
-[INFO] 
-[INFO] Using the builder org.apache.maven.lifecycle.internal.builder.singlethreaded.SingleThreadedBuilder with a thread count of 1
-[INFO]                                                                         
-[INFO] ------------------------------------------------------------------------
-[INFO] Building vjrest 1.0-SNAPSHOT
-[INFO] ------------------------------------------------------------------------
-[INFO] 
+...
 [INFO] --- exec-maven-plugin:1.3.2:exec (default-cli) @ vjrest ---
 INFO: scanning resources...
 INFO: Found api: CityResource.delete => /cities/:city
