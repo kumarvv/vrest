@@ -174,7 +174,7 @@ DELETE /cities/:city => maps to CityResource.delete()
 GET /echo/:str       => maps to CityResource.echo() 
 GET /params          => maps to CityResource.getRequestParams()
 ```
-Note on <code>/echo/:str</code>, starting with <code>/</code> in <code>@GET("/echo/:str")</code> makes the resource to be at root bypassing the <code>@Path</code> annotation at class level. All other resources have <code>/cities</code> as prefix from <code>@Path</code> annotation. 
+Note on <code>/echo/:str</code>, starting with <code>/</code> in <code>@GET("/echo/:str")</code> makes the resource to be at root bypassing the <code>@Resource</code> annotation at class level. All other resources have <code>/cities</code> as prefix from <code>@Resource</code> annotation. 
 
 
 Sample Request/Response: 
