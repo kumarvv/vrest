@@ -45,7 +45,7 @@ INFO: listening on http://localhost:4001
 
 ```
 
-Usage: 
+Usage 
 ------
 
 Import static properties from RESTServer class and add <code>@Resource</code> annotation with path to any POJO (or non-POJO) classes: 
@@ -91,7 +91,7 @@ public City update(@Param("city") String cityCode, @Data City upd) {
 ```
 
 
-Sample REST Resource class: 
+Sample REST Resource class 
 ---------------------------
 
 ```java
@@ -177,7 +177,7 @@ GET /params          => maps to CityResource.getRequestParams()
 Note on <code>/echo/:str</code>, starting with <code>/</code> in <code>@GET("/echo/:str")</code> makes the resource to be at root bypassing the <code>@Resource</code> annotation at class level. All other resources have <code>/cities</code> as prefix from <code>@Resource</code> annotation. 
 
 
-Sample Request/Response: 
+Sample Request/Response 
 --------------
 
 GET request of <code>http://localhost:4001/cities/NYC</code> will return following json: 
